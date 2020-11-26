@@ -1,0 +1,43 @@
+{
+  "name": "as-typed",
+  "version": "1.0.0",
+  "description": "Static TypeScript types from a literal JSONSchema type",
+  "types": "index.d.ts",
+  "scripts": {
+    "start": "ts-node src/main.ts",
+    "test": "$(node spec/setup.js) && jest -w10",
+    "eslint:fix": "eslint --fix '{src,spec}/**/*.ts'",
+    "eslint:check": "eslint '{src,spec}/**/*.ts'",
+    "prettier:fix": "prettier --write '{src,spec}/**/*.{t,j}s'",
+    "prettier:check": "prettier --check '{src,spec}/**/*.{t,j}s'",
+    "build": "tsc"
+  },
+  "keywords": [],
+  "author": "Guilherme Bernal <guilherme@cubos.io>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lbguilherme/as-typed.git"
+  },
+  "bugs": {
+    "url": "https://github.com/lbguilherme/as-typed/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "homepage": "https://github.com/lbguilherme/as-typed#readme",
+  "dependencies": {},
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^4.8.2",
+    "@typescript-eslint/parser": "^4.8.2",
+    "@typescript-eslint/typescript-estree": "^4.8.2",
+    "eslint": "^7.14.0",
+    "eslint-config-prettier": "^6.15.0",
+    "eslint-plugin-import": "^2.20.2",
+    "eslint-plugin-prettier": "^3.1.3",
+    "prettier": "^2.2.0",
+    "spec.ts": "^1.1.3",
+    "ts-node": "^9.0.0",
+    "typescript": "^4.1.2"
+  }
+}
