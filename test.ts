@@ -15,8 +15,6 @@ assert(_ as AsTyped<{ type: "boolean" }>, _ as boolean);
 
 assert(_ as AsTyped<{ type: "null" }>, _ as null);
 
-assert(_ as AsTyped<{ type: "undefined" }>, _ as undefined);
-
 assert(
   _ as AsTyped<{
     definitions: { num: { $id: "def"; type: "number" } };
@@ -109,12 +107,12 @@ assert(
 
 assert(
   _ as AsTyped<{ not: { type: "number" } }>,
-  _ as string | boolean | object | any[] | null | undefined
+  _ as string | boolean | object | any[] | null
 );
 
 assert(
   _ as AsTyped<{ not: { type: "string" } }>,
-  _ as number | boolean | object | any[] | null | undefined
+  _ as number | boolean | object | any[] | null
 );
 
 assert(

@@ -28,8 +28,6 @@ type TypeName<T> = T extends null
   ? "number" | "integer"
   : T extends boolean
   ? "boolean"
-  : T extends undefined
-  ? "undefined"
   : "object";
 
 interface WithID {
@@ -52,8 +50,6 @@ type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends (
 ) => void
   ? I
   : never;
-
-type UndefinedSchema = SchemaDeclaration<undefined>;
 
 type NumberSchema = SchemaDeclaration<number> & {
   multipleOf?: number;
@@ -210,7 +206,6 @@ type ResolveNot<ValueType> =
   | any[]
   | (ValueType extends NullSchema ? never : null)
   | (ValueType extends NumberSchema ? never : number)
-  | (ValueType extends UndefinedSchema ? never : undefined)
   | (ValueType extends StringSchema ? never : string)
   | (ValueType extends BoolSchema ? never : boolean);
 
@@ -240,8 +235,6 @@ type ResolveRecursiveInternal<
     >
   : SchemaType extends ArraySchema<infer ValueType>
   ? ResolveArray<ValueType>
-  : SchemaType extends SchemaDeclaration<typeof undefined>
-  ? undefined
   : never;
 
 // TODO
