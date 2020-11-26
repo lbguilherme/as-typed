@@ -1,0 +1,21 @@
+name: release_dev
+on:
+  push:
+    branches:
+      - master
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+        with:
+          registry-url: https://registry.npmjs.org
+      - run: npm install
+      - run: |
+          npm install -g json && json -I -f package.json -e '
+            this.version = "0.0.0-dev.'$(date -u +'%Y%m%d%H%M%S')'";
+          '
+      - run: npm publish --tag dev
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
