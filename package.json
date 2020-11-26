@@ -6,10 +6,10 @@
   "scripts": {
     "start": "ts-node src/main.ts",
     "test": "$(node spec/setup.js) && jest -w10",
-    "eslint:fix": "eslint --fix '{src,spec}/**/*.ts'",
-    "eslint:check": "eslint '{src,spec}/**/*.ts'",
-    "prettier:fix": "prettier --write '{src,spec}/**/*.{t,j}s'",
-    "prettier:check": "prettier --check '{src,spec}/**/*.{t,j}s'",
+    "eslint:fix": "eslint --fix '*.ts'",
+    "eslint:check": "eslint '*.ts'",
+    "prettier:fix": "prettier --write '*.{t,j}s'",
+    "prettier:check": "prettier --check '*.{t,j}s'",
     "build": "tsc"
   },
   "keywords": [],

@@ -1,4 +1,4 @@
-type SchemaBase = {
+interface SchemaBase {
   $id?: string;
   $ref?: string;
   type?: string;
@@ -6,9 +6,11 @@ type SchemaBase = {
   description?: string;
   default?: any;
   examples?: any[];
-};
+}
 
-type DefinitionsBase = { [name: string]: SchemaBase };
+interface DefinitionsBase {
+  [name: string]: SchemaBase;
+}
 
 type SchemaWithDefinitions<
   SchemaDefinitions extends DefinitionsBase
@@ -30,14 +32,18 @@ type TypeName<T> = T extends null
   ? "undefined"
   : "object";
 
-type WithID = { $id: string };
+interface WithID {
+  $id: string;
+}
 
 type SchemaDeclaration<Type> = SchemaBase & {
   type: TypeName<Type>;
   $id?: string;
 };
 
-type RefSchema<RefId extends string> = { $ref: RefId };
+interface RefSchema<RefId extends string> {
+  $ref: RefId;
+}
 
 type EnumSchema<BaseType, EnumType> = BaseType & { enum: EnumType[] };
 
@@ -191,7 +197,10 @@ type AsTypedTupleSchemaWithAdditional<
   Additional
 > = unknown extends Additional
   ? AsTypedTupleSchema<Tuple>
-  : [...AsTypedTupleSchema<Tuple>, ...ResolveRecursiveInternal<Additional>[]];
+  : [
+      ...AsTypedTupleSchema<Tuple>,
+      ...Array<ResolveRecursiveInternal<Additional>>
+    ];
 
 // This is very crude
 
@@ -298,7 +307,7 @@ type ResolveCombinerRefs<
   ValueType extends SchemaBase,
   Operator extends string,
   Definitions extends DefinitionsBase
-> = { [name in Operator]: ResolveRefs<ValueType, Definitions>[] };
+> = { [name in Operator]: Array<ResolveRefs<ValueType, Definitions>> };
 
 type ResolveOperatorRefs<
   ValueType extends SchemaBase,

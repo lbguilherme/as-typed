@@ -1,5 +1,5 @@
 import { AsTyped } from "./index";
-import { assert, _ } from "spec.ts";
+import { _, assert } from "spec.ts";
 
 const x = { type: "number" } as const;
 
@@ -168,7 +168,7 @@ assert(
       properties: { bla: { type: "string" } };
     };
   }>,
-  _ as [number, string, ...{ bla?: string }[]]
+  _ as [number, string, ...Array<{ bla?: string }>]
 );
 
 assert(
@@ -181,20 +181,22 @@ assert(
       };
     };
   }>,
-  _ as { arr?: { [name: string]: string }[] }
+  _ as { arr?: Array<{ [name: string]: string }> }
 );
 
-// assert(
-//   _ as AsTyped<{
-//     if: { type: "object"; properties: { a: { type: "number" } } };
-//     then: { type: "object"; properties: { b: { type: "string" } } };
-//     else: {
-//       type: "object";
-//       properties: { c: { type: "array"; items: { type: "string" } } };
-//     };
-//   }>,
-//   _ as string
-// );
+/*
+ * assert(
+ *   _ as AsTyped<{
+ *     if: { type: "object"; properties: { a: { type: "number" } } };
+ *     then: { type: "object"; properties: { b: { type: "string" } } };
+ *     else: {
+ *       type: "object";
+ *       properties: { c: { type: "array"; items: { type: "string" } } };
+ *     };
+ *   }>,
+ *   _ as string
+ * );
+ */
 
 assert(
   _ as AsTyped<{
