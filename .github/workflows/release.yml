@@ -1,0 +1,20 @@
+name: release
+on:
+  release:
+    types: [published]
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+        with:
+          registry-url: https://registry.npmjs.org
+      - run: npm install
+      - run: |
+          npm install -g json && json -I -f package.json -e '
+            this.version = "${{ github.ref }}".replace("refs/tags/", "");
+          '
+      - run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
