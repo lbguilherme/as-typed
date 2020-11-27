@@ -48,14 +48,6 @@ type SchemaT = AsTyped<typeof schema>;
 */
 ```
 
-## Overview
-
-There are many tools that convert between Typescript and JSON schema. Howewever, all of them do that with a transpilation step.
-Ambison uses the deep inference options in typescript 3 to infer the types directly from the JSON schema.
-
-This is not a runtime library - it contains only a single generic type, AsTyped.
-AsTyped can take any Json schema and AsTypeds it to a typescript type.
-
 ### Primitive types
 
 - `AsTyped<{type: "string"}>` === `string`
@@ -113,9 +105,9 @@ AsTyped can take any Json schema and AsTypeds it to a typescript type.
 
 - `AsTyped<{definitions: {str1: {$id: "str1", $ref: "str2"}, str2: {$id: "str2", type: "string"}}, $ref: "str1"}>` === `string`
 
-#### Limitations
+#### Path references:
 
-Reference by URL ("#/definitions/foo", "other.json/foo") are not supported yet.
+- `AsTyped<{definitions: {foo: {type: "number"}}, $ref: "#/definitions/foo"}>` === `number`
 
 ### not
 

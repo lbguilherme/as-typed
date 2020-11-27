@@ -227,3 +227,22 @@ assert(
   }>,
   _ as string
 );
+
+assert(
+  _ as AsTyped<{
+    definitions: { foo: { type: "number" } };
+    $ref: "#/definitions/foo";
+  }>,
+  _ as number
+);
+
+assert(
+  _ as AsTyped<{
+    definitions: {
+      str1: { $ref: "#/definitions/str2" };
+      str2: { type: "string" };
+    };
+    $ref: "#/definitions/str1";
+  }>,
+  _ as string
+);
