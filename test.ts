@@ -11,6 +11,12 @@ assert(_ as AsTyped<{ type: "integer" }>, _ as number);
 
 assert(_ as AsTyped<{ type: "string" }>, _ as string);
 
+assert(_ as AsTyped<{ type: ["string", "null"] }>, _ as string | null);
+
+assert(_ as AsTyped<{ type: "string"; nullable: true }>, _ as string | null);
+
+assert(_ as AsTyped<{ type: "string"; nullable: false }>, _ as string);
+
 assert(_ as AsTyped<{ type: "boolean" }>, _ as boolean);
 
 assert(_ as AsTyped<{ type: "null" }>, _ as null);
@@ -180,6 +186,19 @@ assert(
     };
   }>,
   _ as { arr?: Array<{ [name: string]: string }> }
+);
+
+assert(
+  _ as AsTyped<{
+    type: ["object", "boolean", "null"];
+    properties: {
+      arr: {
+        type: "array";
+        items: { type: "object"; additionalProperties: { type: "string" } };
+      };
+    };
+  }>,
+  _ as { arr?: Array<{ [name: string]: string }> } | boolean | null
 );
 
 /*

@@ -2,9 +2,10 @@ declare namespace AsTypedInternal {
   interface SchemaBase {
     $id?: string;
     $ref?: string;
-    type?: string;
+    type?: string | string[];
     title?: string;
     description?: string;
+    nullable?: boolean;
     default?: any;
     examples?: any[];
   }
@@ -211,9 +212,11 @@ declare namespace AsTypedInternal {
     | (ValueType extends StringSchema ? never : string)
     | (ValueType extends BoolSchema ? never : boolean);
 
-  type ResolveRecursiveInternal<
-    SchemaType
-  > = SchemaType extends SchemaDeclaration<null>
+  type ResolveRecursiveInternal<SchemaType> = SchemaType extends {
+    nullable: true;
+  }
+    ? ResolveRecursiveInternal<Omit<SchemaType, "nullable">> | null
+    : SchemaType extends SchemaDeclaration<null>
     ? null
     : SchemaType extends ConstSchema<infer Value>
     ? Value
@@ -237,6 +240,16 @@ declare namespace AsTypedInternal {
       >
     : SchemaType extends ArraySchema<infer ValueType>
     ? ResolveArray<ValueType>
+    : SchemaType extends {
+        type: [infer Type];
+      }
+    ? ResolveRecursiveInternal<Omit<SchemaType, "type"> & { type: Type }>
+    : SchemaType extends {
+        type: [infer Type, ...infer Rest];
+      }
+    ?
+        | ResolveRecursiveInternal<Omit<SchemaType, "type"> & { type: Type }>
+        | ResolveRecursiveInternal<Omit<SchemaType, "type"> & { type: Rest }>
     : never;
 
   // TODO
