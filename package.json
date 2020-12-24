@@ -1,18 +1,21 @@
 {
   "name": "as-typed",
-  "version": "1.0.0",
+  "version": "0.0.0",
   "description": "Static TypeScript types from a literal JSONSchema type",
   "types": "index.d.ts",
   "scripts": {
-    "start": "ts-node src/main.ts",
-    "test": "$(node spec/setup.js) && jest -w10",
+    "test": "tsc -noEmit",
     "eslint:fix": "eslint --fix '*.ts'",
     "eslint:check": "eslint '*.ts'",
     "prettier:fix": "prettier --write '*.{t,j}s'",
     "prettier:check": "prettier --check '*.{t,j}s'",
-    "build": "tsc"
   },
-  "keywords": [],
+  "keywords": [
+    "typescript",
+    "jsonschema",
+    "json",
+    "schema"
+  ],
   "author": "Guilherme Bernal <guilherme@cubos.io>",
   "license": "MIT",
   "repository": {
