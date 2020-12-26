@@ -8,7 +8,7 @@
     "eslint:fix": "eslint --fix '*.ts'",
     "eslint:check": "eslint '*.ts'",
     "prettier:fix": "prettier --write '*.{t,j}s'",
-    "prettier:check": "prettier --check '*.{t,j}s'",
+    "prettier:check": "prettier --check '*.{t,j}s'"
   },
   "keywords": [
     "typescript",
