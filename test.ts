@@ -128,6 +128,30 @@ assert(
 
 assert(
   _ as AsTyped<{
+    oneOf: [{ type: "string" }, { type: "array"; items: { type: "string" } }];
+  }>,
+  _ as string | string[]
+);
+
+assert(
+  _ as AsTyped<{
+    oneOf: [{ type: "string" }, { type: "array"; items: [] }];
+  }>,
+  _ as string | []
+);
+
+assert(
+  _ as AsTyped<{
+    oneOf: [
+      { type: "array"; items: [{ type: "string" }] },
+      { type: "array"; items: [] }
+    ];
+  }>,
+  _ as [string] | []
+);
+
+assert(
+  _ as AsTyped<{
     oneOf: [
       { type: "string" },
       { type: "object"; properties: { a: { type: "number" } } }

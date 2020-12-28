@@ -226,6 +226,10 @@ declare namespace AsTypedInternal {
     ? boolean
     : SchemaType extends SchemaDeclaration<number>
     ? number
+    : SchemaType extends TupleSchema<infer TupleType, infer Additional>
+    ? Additional extends null
+      ? AsTypedTupleSchema<TupleType>
+      : AsTypedTupleSchemaWithAdditional<TupleType, Additional>
     : SchemaType extends Not<infer T>
     ? ResolveNot<T>
     : SchemaType extends ObjectSchema<
@@ -252,10 +256,6 @@ declare namespace AsTypedInternal {
         | ResolveRecursiveInternal<Omit<SchemaType, "type"> & { type: Rest }>
     : never;
 
-  // TODO
-
-  type ResolveOneOf<InnerSchema> = InnerSchema;
-
   // High order resolution changes the schema before resolving it to typed
 
   type ResolveHighOrder<
@@ -263,21 +263,16 @@ declare namespace AsTypedInternal {
   > = SchemaToResolve extends IfThenElseSchema<infer If, infer Then, infer Else>
     ? (If & Then) | Else
     : SchemaToResolve extends OneOf<infer Inner>
-    ? ResolveOneOf<Inner>
+    ? Inner
     : SchemaToResolve extends AllOf<infer Inner>
     ? UnionToIntersection<Inner>
     : SchemaToResolve extends AnyOf<infer Inner>
     ? Inner
     : SchemaToResolve;
 
-  type ResolveRecursive<SchemaType> = SchemaType extends TupleSchema<
-    infer TupleType,
-    infer Additional
-  >
-    ? Additional extends null
-      ? AsTypedTupleSchema<TupleType>
-      : AsTypedTupleSchemaWithAdditional<TupleType, Additional>
-    : ResolveRecursiveInternal<ResolveHighOrder<SchemaType>>;
+  type ResolveRecursive<SchemaType> = ResolveRecursiveInternal<
+    ResolveHighOrder<SchemaType>
+  >;
 
   type MapPropsToRefs<
     RootSchema,
