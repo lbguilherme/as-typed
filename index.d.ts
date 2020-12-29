@@ -409,8 +409,14 @@ declare namespace AsTypedInternal {
   type DeepUnReadonlyObject<T> = {
     -readonly [P in keyof T]: DeepUnReadonly<T[P]>;
   };
+
+  type ExpandRecursively<T> = T extends object
+    ? T extends infer O
+      ? { [K in keyof O]: ExpandRecursively<O[K]> }
+      : never
+    : T;
 }
 
-export type AsTyped<Schema> = AsTypedInternal.ResolveRootSchema<
-  AsTypedInternal.DeepUnReadonly<Schema>
+export type AsTyped<Schema> = AsTypedInternal.ExpandRecursively<
+  AsTypedInternal.ResolveRootSchema<AsTypedInternal.DeepUnReadonly<Schema>>
 >;

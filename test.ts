@@ -108,7 +108,7 @@ assert(
     properties: { a: { type: "number" }; b: { type: "string" } };
     required: ["a"];
   }>,
-  _ as { a: number } & { b?: string }
+  _ as { a: number; b?: string }
 );
 
 assert(
