@@ -20,24 +20,8 @@ declare namespace AsTypedInternal {
     definitions: SchemaDefinitions;
   };
 
-  type TypeName<T> = T extends null
-    ? "null"
-    : T extends string
-    ? "string"
-    : T extends any[]
-    ? "array"
-    : T extends number
-    ? "number" | "integer"
-    : T extends boolean
-    ? "boolean"
-    : "object";
-
-  interface WithID {
-    $id: string;
-  }
-
   type SchemaDeclaration<Type> = SchemaBase & {
-    type: TypeName<Type>;
+    type: Type;
     $id?: string;
   };
 
@@ -53,7 +37,7 @@ declare namespace AsTypedInternal {
     ? I
     : never;
 
-  type NumberSchema = SchemaDeclaration<number> & {
+  type NumberSchema = SchemaDeclaration<"number" | "integer"> & {
     multipleOf?: number;
     minimun?: number;
     exclusiveMinimum?: number;
@@ -61,7 +45,7 @@ declare namespace AsTypedInternal {
     exclusiveMaximum?: number;
   };
 
-  type StringSchema = SchemaDeclaration<string> & {
+  type StringSchema = SchemaDeclaration<"string"> & {
     pattern?: RegExp;
     maxLength?: number;
     minLength?: number;
@@ -78,17 +62,13 @@ declare namespace AsTypedInternal {
     ? BoolSchema
     : never);
 
-  type BoolSchema = SchemaDeclaration<boolean>;
-
-  type NullSchema = SchemaDeclaration<null>;
-
-  type LeafSchema = NumberSchema | StringSchema | BoolSchema | NullSchema;
+  type BoolSchema = SchemaDeclaration<"boolean">;
 
   type ObjectSchema<
     Props,
     ReqProps extends string[],
     AdditionalProps extends SchemaBase | null = null
-  > = SchemaDeclaration<{}> & {
+  > = SchemaDeclaration<"object"> & {
     required?: ReqProps;
     properties?: Props;
     additionalProperties?: AdditionalProps;
@@ -125,7 +105,7 @@ declare namespace AsTypedInternal {
 
   type Not<ValueType extends SchemaBase> = OperatorSchema<ValueType, "not">;
 
-  type ArraySchemaBase = SchemaDeclaration<any[]> & {
+  type ArraySchemaBase = SchemaDeclaration<"array"> & {
     maxItems?: number;
     minItems?: number;
     uniqueItems?: boolean;
@@ -201,13 +181,11 @@ declare namespace AsTypedInternal {
         ...Array<ResolveRecursiveInternal<Additional>>
       ];
 
-  // This is very crude
-
   type ResolveNot<ValueType> =
     // TODO: allow Not() for array/object types of specific schemas. Not easy.
     | object
     | any[]
-    | (ValueType extends NullSchema ? never : null)
+    | (ValueType extends SchemaDeclaration<"null"> ? never : null)
     | (ValueType extends NumberSchema ? never : number)
     | (ValueType extends StringSchema ? never : string)
     | (ValueType extends BoolSchema ? never : boolean);
@@ -216,15 +194,15 @@ declare namespace AsTypedInternal {
     nullable: true;
   }
     ? ResolveRecursiveInternal<Omit<SchemaType, "nullable">> | null
-    : SchemaType extends SchemaDeclaration<null>
+    : SchemaType extends SchemaDeclaration<"null">
     ? null
     : SchemaType extends ConstSchema<infer Value>
     ? Value
-    : SchemaType extends SchemaDeclaration<string>
+    : SchemaType extends SchemaDeclaration<"string">
     ? string
-    : SchemaType extends SchemaDeclaration<boolean>
+    : SchemaType extends SchemaDeclaration<"boolean">
     ? boolean
-    : SchemaType extends SchemaDeclaration<number>
+    : SchemaType extends SchemaDeclaration<"number" | "integer">
     ? number
     : SchemaType extends TupleSchema<infer TupleType, infer Additional>
     ? Additional extends null
@@ -304,7 +282,7 @@ declare namespace AsTypedInternal {
     RootSchema,
     ValueType extends SchemaBase,
     Definitions extends DefinitionsBase
-  > = SchemaDeclaration<any[]> & {
+  > = SchemaDeclaration<"array"> & {
     items: ResolveRefs<RootSchema, ValueType, Definitions>;
   };
 
@@ -313,7 +291,7 @@ declare namespace AsTypedInternal {
     Tuple extends SchemaBase[],
     Additional extends SchemaBase,
     Definitions extends DefinitionsBase
-  > = SchemaDeclaration<any[]> & {
+  > = SchemaDeclaration<"array"> & {
     items: ResolveRefs<RootSchema, Tuple, Definitions>;
     additionalItems: ResolveRefs<RootSchema, Additional, Definitions>;
   };
@@ -398,14 +376,7 @@ declare namespace AsTypedInternal {
     ResolveRefsForRootSchema<RootSchema>
   >;
 
-  type DeepUnReadonly<T> = T extends
-    | string
-    | number
-    | boolean
-    | undefined
-    | null
-    ? T
-    : DeepUnReadonlyObject<T>;
+  type DeepUnReadonly<T> = T extends object ? DeepUnReadonlyObject<T> : T;
   type DeepUnReadonlyObject<T> = {
     -readonly [P in keyof T]: DeepUnReadonly<T[P]>;
   };
