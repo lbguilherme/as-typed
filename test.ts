@@ -289,3 +289,12 @@ assert(
   }>,
   _ as string
 );
+
+assert(
+  _ as AsTyped<{
+    type: "object";
+    properties: { b: { type: "boolean" } };
+    additionalProperties: true,
+  }>,
+  _ as { b?: boolean, [k: string]: unknown }
+);
