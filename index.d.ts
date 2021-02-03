@@ -66,7 +66,7 @@ declare namespace AsTypedInternal {
   type ObjectSchema<
     Props,
     ReqProps extends string[],
-    AdditionalProps extends SchemaBase | null = null
+    AdditionalProps extends SchemaBase | boolean = false
   > = SchemaDeclaration<"object"> & {
     required?: ReqProps;
     properties?: Props;
@@ -150,8 +150,10 @@ declare namespace AsTypedInternal {
 
   type ResolveObjectAdditionalProps<
     AdditionalPropsSchema
-  > = AdditionalPropsSchema extends null
+  > = AdditionalPropsSchema extends false
     ? unknown
+    : AdditionalPropsSchema extends true
+    ? { [key: string]: unknown }
     : { [key: string]: ResolveRecursive<AdditionalPropsSchema> };
 
   type ResolveObject<
