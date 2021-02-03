@@ -30,17 +30,6 @@ assert(
 );
 
 assert(
-  _ as AsTyped<{
-    definitions: {
-      str1: { $id: "def"; $ref: "def2" };
-      str2: { $id: "def2"; type: "string" };
-    };
-    $ref: "def";
-  }>,
-  _ as string
-);
-
-assert(
   _ as AsTyped<{ type: "array"; items: { type: "number" } }>,
   _ as number[]
 );
@@ -124,6 +113,23 @@ assert(
 assert(
   _ as AsTyped<{ oneOf: [{ type: "string" }, { type: "number" }] }>,
   _ as string | number
+);
+
+assert(
+  _ as AsTyped<{
+    oneOf: [{ type: "string" }, { type: "number" }, { type: "boolean" }];
+  }>,
+  _ as string | number | boolean
+);
+
+assert(
+  _ as AsTyped<{
+    oneOf: [
+      { type: "string" },
+      { oneOf: [{ type: "number" }, { type: "boolean" }] }
+    ];
+  }>,
+  _ as string | number | boolean
 );
 
 assert(

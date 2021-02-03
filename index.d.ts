@@ -1,28 +1,27 @@
 declare namespace AsTypedInternal {
-  interface SchemaBase {
+  type SchemaBase = {
     $id?: string;
-    $ref?: string;
-    type?: string | string[];
-    title?: string;
-    description?: string;
-    nullable?: boolean;
-    default?: any;
-    examples?: any[];
-  }
-
-  interface DefinitionsBase {
-    [name: string]: SchemaBase;
-  }
-
-  type SchemaWithDefinitions<
-    SchemaDefinitions extends DefinitionsBase
-  > = SchemaBase & {
-    definitions: SchemaDefinitions;
-  };
+  } & (
+    | {
+        type?: string | string[];
+        title?: string;
+        description?: string;
+        nullable?: boolean;
+        default?: any;
+        examples?: any[];
+      }
+    | { $ref: string }
+    | { oneOf: SchemaBase[] }
+    | { allOf: SchemaBase[] }
+    | {
+        if: SchemaBase;
+        then: SchemaBase;
+        else?: SchemaBase;
+      }
+  );
 
   type SchemaDeclaration<Type> = SchemaBase & {
     type: Type;
-    $id?: string;
   };
 
   interface RefSchema<RefId extends string> {
@@ -232,98 +231,62 @@ declare namespace AsTypedInternal {
     ?
         | ResolveRecursiveInternal<Omit<SchemaType, "type"> & { type: Type }>
         | ResolveRecursiveInternal<Omit<SchemaType, "type"> & { type: Rest }>
-    : never;
+    : SchemaType extends OneOf<infer Inner>
+    ? ResolveRecursiveInternal<Inner>
+    : SchemaType extends AnyOf<infer Inner>
+    ? ResolveRecursiveInternal<Inner>
+    : SchemaType extends AllOf<infer Inner>
+    ? ResolveRecursiveInternal<UnionToIntersection<Inner>>
+    : SchemaType extends IfThenElseSchema<infer If, infer Then, infer Else>
+    ? ResolveRecursiveInternal<(If & Then) | Else>
+    : SchemaType;
 
-  // High order resolution changes the schema before resolving it to typed
+  type ResolveRecursive<SchemaType> = ResolveRecursiveInternal<SchemaType>;
 
-  type ResolveHighOrder<
-    SchemaToResolve extends SchemaBase
-  > = SchemaToResolve extends IfThenElseSchema<infer If, infer Then, infer Else>
-    ? (If & Then) | Else
-    : SchemaToResolve extends OneOf<infer Inner>
-    ? Inner
-    : SchemaToResolve extends AllOf<infer Inner>
-    ? UnionToIntersection<Inner>
-    : SchemaToResolve extends AnyOf<infer Inner>
-    ? Inner
-    : SchemaToResolve;
-
-  type ResolveRecursive<SchemaType> = ResolveRecursiveInternal<
-    ResolveHighOrder<SchemaType>
-  >;
-
-  type MapPropsToRefs<
-    RootSchema,
-    Props,
-    Definitions extends DefinitionsBase
-  > = Definitions extends { [name: string]: SchemaBase }
-    ? {
-        [name in keyof Props]: ResolveRefs<
-          RootSchema,
-          Props[name],
-          Definitions
-        >;
-      }
-    : never;
+  type MapPropsToRefs<RootSchema, Props> = {
+    [name in keyof Props]: ResolveRefs<RootSchema, Props[name]>;
+  };
 
   type ResolveIfThenElseRefs<
     RootSchema,
     If extends SchemaBase,
     Then extends SchemaBase,
-    Else extends SchemaBase,
-    Definitions extends DefinitionsBase
+    Else extends SchemaBase
   > = SchemaBase & {
-    if: ResolveRefs<RootSchema, If, Definitions>;
-    then: ResolveRefs<RootSchema, Then, Definitions>;
-    else: ResolveRefs<RootSchema, Else, Definitions>;
+    if: ResolveRefs<RootSchema, If>;
+    then: ResolveRefs<RootSchema, Then>;
+    else: ResolveRefs<RootSchema, Else>;
   };
 
   type ResolveArrayRefs<
     RootSchema,
-    ValueType extends SchemaBase,
-    Definitions extends DefinitionsBase
+    ValueType extends SchemaBase
   > = SchemaDeclaration<"array"> & {
-    items: ResolveRefs<RootSchema, ValueType, Definitions>;
+    items: ResolveRefs<RootSchema, ValueType>;
   };
 
   type ResolveTupleRefs<
     RootSchema,
     Tuple extends SchemaBase[],
-    Additional extends SchemaBase,
-    Definitions extends DefinitionsBase
+    Additional extends SchemaBase
   > = SchemaDeclaration<"array"> & {
-    items: ResolveRefs<RootSchema, Tuple, Definitions>;
-    additionalItems: ResolveRefs<RootSchema, Additional, Definitions>;
+    items: ResolveRefs<RootSchema, Tuple>;
+    additionalItems: ResolveRefs<RootSchema, Additional>;
   };
 
   type ResolveCombinerRefs<
     RootSchema,
     ValueType extends SchemaBase,
-    Operator extends string,
-    Definitions extends DefinitionsBase
+    Operator extends string
   > = {
-    [name in Operator]: Array<ResolveRefs<RootSchema, ValueType, Definitions>>;
+    [name in Operator]: Array<ResolveRefs<RootSchema, ValueType>>;
   };
 
   type ResolveOperatorRefs<
     RootSchema,
     ValueType extends SchemaBase,
-    Operator extends string,
-    Definitions extends DefinitionsBase
-  > = { [name in Operator]: ResolveRefs<RootSchema, ValueType, Definitions> };
-
-  type ResolveDefinitions<RootSchema, Definitions extends DefinitionsBase> = {
-    [DefinitionName in keyof Definitions]: ResolveRefs<
-      RootSchema,
-      Definitions[DefinitionName],
-      Definitions
-    >;
-  };
-
-  type ExtractDefinitionsById<Definitions extends DefinitionsBase> = {
-    [key in Definitions[keyof Definitions]["$id"] &
-      string]: Definitions[keyof Definitions];
-  };
+    Operator extends string
+  > = { [name in Operator]: ResolveRefs<RootSchema, ValueType> };
 
   type ResolvePath<
     Schema,
@@ -336,44 +299,37 @@ declare namespace AsTypedInternal {
     ? Schema[Path]
     : never;
 
+  type LocateId<Candidates, Id extends string> = Candidates extends { $id: Id }
+    ? Candidates
+    : never;
+
   type ResolveRefs<
     RootSchema,
-    SchemaToResolve,
-    Definitions extends DefinitionsBase
+    SchemaToResolve
   > = SchemaToResolve extends RefSchema<infer RefId>
     ? RefId extends `#/${infer Path}`
-      ? ResolveRefs<RootSchema, ResolvePath<RootSchema, Path>, Definitions>
-      : Definitions[RefId]
+      ? ResolveRefs<RootSchema, ResolvePath<RootSchema, Path>>
+      : RootSchema extends { definitions: infer Definitions }
+      ? ResolveRefs<RootSchema, LocateId<Definitions[keyof Definitions], RefId>>
+      : never
     : SchemaToResolve extends ObjectSchema<infer Props, infer Required>
-    ? ObjectSchema<MapPropsToRefs<RootSchema, Props, Definitions>, Required>
+    ? ObjectSchema<MapPropsToRefs<RootSchema, Props>, Required>
     : SchemaToResolve extends TupleSchema<infer Tuple, infer Additional>
     ? Tuple extends SchemaBase[]
-      ? ResolveTupleRefs<RootSchema, Tuple, Additional, Definitions>
+      ? ResolveTupleRefs<RootSchema, Tuple, Additional>
       : never
     : SchemaToResolve extends ArraySchema<infer ValueType>
-    ? ResolveArrayRefs<RootSchema, ValueType, Definitions>
+    ? ResolveArrayRefs<RootSchema, ValueType>
     : SchemaToResolve extends CombinerSchema<infer ValueType, infer Operator>
-    ? ResolveCombinerRefs<RootSchema, ValueType, Operator, Definitions>
+    ? ResolveCombinerRefs<RootSchema, ValueType, Operator>
     : SchemaToResolve extends OperatorSchema<infer ValueType, infer Operator>
-    ? ResolveOperatorRefs<RootSchema, ValueType, Operator, Definitions>
+    ? ResolveOperatorRefs<RootSchema, ValueType, Operator>
     : SchemaToResolve extends IfThenElseSchema<infer If, infer Then, infer Else>
-    ? ResolveIfThenElseRefs<RootSchema, If, Then, Else, Definitions>
+    ? ResolveIfThenElseRefs<RootSchema, If, Then, Else>
     : SchemaToResolve;
 
-  type ResolveRootSchemaDefinitions<
-    Schema
-  > = Schema extends SchemaWithDefinitions<infer D>
-    ? ResolveDefinitions<Schema, ExtractDefinitionsById<D>>
-    : {};
-
-  type ResolveRefsForRootSchema<RootSchema> = ResolveRefs<
-    RootSchema,
-    RootSchema,
-    ResolveRootSchemaDefinitions<RootSchema>
-  >;
-
   type ResolveRootSchema<RootSchema> = ResolveRecursive<
-    ResolveRefsForRootSchema<RootSchema>
+    ResolveRefs<RootSchema, RootSchema>
   >;
 
   type DeepUnReadonly<T> = T extends object ? DeepUnReadonlyObject<T> : T;
