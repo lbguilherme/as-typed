@@ -169,7 +169,7 @@ declare namespace AsTypedInternal {
   type AsTypedTupleSchema<Tuple extends unknown[]> = Tuple extends []
     ? []
     : Tuple extends [infer A, ...infer Rest]
-    ? [ResolveRecursiveInternal<A>, ...AsTypedTupleSchema<Rest>]
+    ? [ResolveRecursive<A>, ...AsTypedTupleSchema<Rest>]
     : never;
 
   type AsTypedTupleSchemaWithAdditional<
@@ -177,10 +177,7 @@ declare namespace AsTypedInternal {
     Additional
   > = unknown extends Additional
     ? AsTypedTupleSchema<Tuple>
-    : [
-        ...AsTypedTupleSchema<Tuple>,
-        ...Array<ResolveRecursiveInternal<Additional>>
-      ];
+    : [...AsTypedTupleSchema<Tuple>, ...Array<ResolveRecursive<Additional>>];
 
   type ResolveNot<ValueType> =
     // TODO: allow Not() for array/object types of specific schemas. Not easy.
@@ -191,10 +188,10 @@ declare namespace AsTypedInternal {
     | (ValueType extends StringSchema ? never : string)
     | (ValueType extends BoolSchema ? never : boolean);
 
-  type ResolveRecursiveInternal<SchemaType> = SchemaType extends {
+  type ResolveRecursive<SchemaType> = SchemaType extends {
     nullable: true;
   }
-    ? ResolveRecursiveInternal<Omit<SchemaType, "nullable">> | null
+    ? ResolveRecursive<Omit<SchemaType, "nullable">> | null
     : SchemaType extends SchemaDeclaration<"null">
     ? null
     : SchemaType extends ConstSchema<infer Value>
@@ -226,24 +223,22 @@ declare namespace AsTypedInternal {
     : SchemaType extends {
         type: [infer Type];
       }
-    ? ResolveRecursiveInternal<Omit<SchemaType, "type"> & { type: Type }>
+    ? ResolveRecursive<Omit<SchemaType, "type"> & { type: Type }>
     : SchemaType extends {
         type: [infer Type, ...infer Rest];
       }
     ?
-        | ResolveRecursiveInternal<Omit<SchemaType, "type"> & { type: Type }>
-        | ResolveRecursiveInternal<Omit<SchemaType, "type"> & { type: Rest }>
+        | ResolveRecursive<Omit<SchemaType, "type"> & { type: Type }>
+        | ResolveRecursive<Omit<SchemaType, "type"> & { type: Rest }>
     : SchemaType extends OneOf<infer Inner>
-    ? ResolveRecursiveInternal<Inner>
+    ? ResolveRecursive<Inner>
     : SchemaType extends AnyOf<infer Inner>
-    ? ResolveRecursiveInternal<Inner>
+    ? ResolveRecursive<Inner>
     : SchemaType extends AllOf<infer Inner>
-    ? ResolveRecursiveInternal<UnionToIntersection<Inner>>
+    ? ResolveRecursive<UnionToIntersection<Inner>>
     : SchemaType extends IfThenElseSchema<infer If, infer Then, infer Else>
-    ? ResolveRecursiveInternal<(If & Then) | Else>
+    ? ResolveRecursive<(If & Then) | Else>
     : SchemaType;
-
-  type ResolveRecursive<SchemaType> = ResolveRecursiveInternal<SchemaType>;
 
   type MapPropsToRefs<RootSchema, Props> = {
     [name in keyof Props]: ResolveRefs<RootSchema, Props[name]>;
