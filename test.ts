@@ -178,6 +178,21 @@ assert(
 
 assert(
   _ as AsTyped<{
+    allOf: [
+      { type: "object"; properties: { a: { type: "number" } } },
+      {
+        oneOf: [
+          { type: "object"; properties: { b: { type: "string" } } },
+          { type: "object"; properties: { b: { type: "boolean" } } }
+        ];
+      }
+    ];
+  }>,
+  _ as { a?: number; b?: string } | { a?: number; b?: boolean }
+);
+
+assert(
+  _ as AsTyped<{
     type: "array";
     items: [{ type: "number" }, { type: "string" }];
   }>,
