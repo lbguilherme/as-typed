@@ -41,23 +41,19 @@ declare namespace AsTypedInternal {
         [K in keyof Props]?: Resolve<Props[K]>;
       };
 
-  type ResolveObjectAdditionalProps<
-    AdditionalProperties
-  > = unknown extends AdditionalProperties
-    ? unknown
-    : AdditionalProperties extends false | undefined
-    ? unknown
-    : AdditionalProperties extends true
-    ? { [key: string]: unknown }
-    : { [key: string]: Resolve<AdditionalProperties> };
+  type ResolveObjectAdditionalProps<AdditionalProperties> =
+    unknown extends AdditionalProperties
+      ? unknown
+      : AdditionalProperties extends false | undefined
+      ? unknown
+      : AdditionalProperties extends true
+      ? { [key: string]: unknown }
+      : { [key: string]: Resolve<AdditionalProperties> };
 
-  type ResolveObject<
-    Props,
-    RequiredPropNames,
-    AdditionalProperties
-  > = ResolveObjectRequiredProps<Props, RequiredPropNames> &
-    ResolveObjectOptionalProps<Props, RequiredPropNames> &
-    ResolveObjectAdditionalProps<AdditionalProperties>;
+  type ResolveObject<Props, RequiredPropNames, AdditionalProperties> =
+    ResolveObjectRequiredProps<Props, RequiredPropNames> &
+      ResolveObjectOptionalProps<Props, RequiredPropNames> &
+      ResolveObjectAdditionalProps<AdditionalProperties>;
 
   type AsTypedTupleSchema<Tuple extends unknown[]> = Tuple extends []
     ? []
@@ -146,16 +142,14 @@ declare namespace AsTypedInternal {
     ? Resolve<Head> & ResolveAllOf<Tail>
     : unknown;
 
-  type ResolvePath<
-    Schema,
-    Path
-  > = Path extends `${infer Prop}/${infer PathRest}`
-    ? Prop extends keyof Schema
-      ? ResolvePath<Schema[Prop], PathRest>
-      : never
-    : Path extends keyof Schema
-    ? Schema[Path]
-    : never;
+  type ResolvePath<Schema, Path> =
+    Path extends `${infer Prop}/${infer PathRest}`
+      ? Prop extends keyof Schema
+        ? ResolvePath<Schema[Prop], PathRest>
+        : never
+      : Path extends keyof Schema
+      ? Schema[Path]
+      : never;
 
   type LocateId<Candidates, Id> = Candidates extends { $id: Id }
     ? Candidates
