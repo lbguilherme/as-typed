@@ -1,5 +1,7 @@
 # `as-typed`
 
+![npm badge](https://img.shields.io/npm/v/as-typed)
+
 Type magic to convert a JSON Schema literal into the proper TypeScript type representation, all without additional build steps. This module has no runtime functionality by itself. It exposes a single `AsTyped` type which takes a valid JSON Schema and outputs the equivalent type for it. With this you can get type safety at runtime and validate your values at runtime writing types just once. Great for JSON integrations and data serialization.
 
 This is forked from https://github.com/wix-incubator/as-typed fixing many bugs, modernizing and introducing support for more types thanks to newer TypeScript features.
@@ -21,20 +23,20 @@ const schema = {
   required: ["firstName", "age", "hairColor"],
   properties: {
     firstName: {
-      type: "string",
+      type: "string"
     },
     lastName: {
-      type: "string",
+      type: "string"
     },
     age: {
       type: "integer",
-      minimum: 0,
+      minimum: 0
     },
     hairColor: {
       enum: ["black", "brown", "blue"],
-      type: "string",
-    },
-  },
+      type: "string"
+    }
+  }
 } as const; // <<< "as const" is important to preserve literal type
 
 type SchemaT = AsTyped<typeof schema>;
@@ -48,86 +50,159 @@ type SchemaT = AsTyped<typeof schema>;
 */
 ```
 
-### Primitive types
+### Primitive and literal types
 
-- `AsTyped<{type: "string"}>` === `string`
-- `AsTyped<{type: "number"}>` === `number`
-- `AsTyped<{type: "integer"}>` === `number`
-- `AsTyped<{type: "boolean"}>` === `boolean`
-- `AsTyped<{type: "null"}>` === `null`
-- `AsTyped<{type: "undefined"}>` === `undefined`
+```typescript
+type Str = AsTyped<{ type: "string" }>; // string
+type Num = AsTyped<{ type: "number" }>; // number
+type Int = AsTyped<{ type: "integer" }>; // number
+type Bool = AsTyped<{ type: "boolean" }>; // boolean
+type Null = AsTyped<{ type: "null" }>; // null
+type Undef = AsTyped<{ type: "undefined" }>; // undefined
 
-#### Limitations
+type ConstStr = AsTyped<{ type: "string"; const: "Hello" }>; // "Hello"
+type ConstNum = AsTyped<{ type: "integer"; const: 4 }>; // 4
+type Enum = AsTyped<{
+  type: "string";
+  enum: ["First", "Second", "Third"];
+}>; // "First" | "Second" | "Third"
 
-- Patterns are not supported.
-  There is no regex validation in typescript
-  [Typescript issue 6579](https://github.com/Microsoft/TypeScript/issues/41160)
+type Nullable1 = AsTyped<{ type: ["string", "null"] }>; // string | null
+type Nullable2 = AsTyped<{ type: "string"; nullable: true }>; // string | null
+```
 
-- Value validation (min, max etc) is not supported
-  Typescript is not meant for value checking (at least currently).
+- Patterns are not supported. There is no regex validation in typescript, see [Typescript issue 6579](https://github.com/Microsoft/TypeScript/issues/41160).
+- Value validation (min, max etc) is not supported. Typescript is not meant for value checking (at least currently).
 
-### Defined objects
+### Objects
 
-- `AsTyped<{type: "object", properties: {foo: {type: "number"}}>` === `{foo?: number}`
+```typescript
+type Obj1 = AsTyped<{
+  type: "object";
+  properties: {
+    foo: { type: "number" };
+  };
+}>; // { foo?: number }
 
-#### with required properties
+type Obj2 = AsTyped<{
+  type: "object";
+  properties: {
+    foo: { type: "number" };
+    bar: { type: "string" };
+  };
+  required: ["foo"];
+}>; // { foo: number, bar?: string }
 
-- `AsTyped<{type: "object", properties: {foo: {type: "number"}, bar: {type: "string}, required: ["foo"]}>` === `{foo: number, bar?: string}`
+type Obj3 = AsTyped<{
+  type: "object";
+  additionalProperties: { type: "integer" };
+}>; // Record<string, number>
+```
 
-#### objects with a specific value type
+### Arrays and Tuples
 
-`AsTyped<{type: "array", items: [{type: "number"}, {type: "string"}], additionalItems: {type: "boolean"}}>` === `[number, string, ...boolean[]]`
+```typescript
+type List1 = AsTyped<{
+  type: "array";
+  items: { type: "string" };
+}>; // string[]
 
-### Recursive objects and arrays
+type List2 = AsTyped<{
+  type: "array";
+  items: {
+    type: "array";
+    items: { type: "string" };
+  };
+}>; // string[][]
 
-- `AsTyped<{type: "array", items: {type: "array", items: {type: "string"}}}>` === `string[][]`
-- `AsTyped<{type: "object", properties: {arr: {type: "array", items: {type: "object", additionalProperties: {type: "string"}}}}}` === `{arr?: {[name: string]: string}[]}`
+type Tuple1 = AsTyped<{
+  type: "array";
+  items: [{ type: "string" }, { type: "number" }];
+}>; // [string, number]
 
-### Simple array
+type Tuple2 = AsTyped<{
+  type: "array";
+  items: [{ type: "number" }, { type: "string" }];
+  additionalItems: { type: "boolean" };
+}>; // [number, string, ...boolean[]]
+```
 
-- `AsTyped<{type: "array", items: {type: "string"}}>` === `string[]`
+### References by id
 
-### Tuple
+```typescript
+type ObjFromRefs = AsTyped<{
+  definitions: {
+    User: {
+      $id: "userschemaid";
+      type: "object";
+      properties: {
+        name: { type: "string" };
+        age: { type: "integer" };
+      };
+    };
+    UserList: {
+      $id: "userlist";
+      type: "array";
+      items: { $ref: "userschemaid" };
+    };
+  };
+  type: "object";
+  required: ["result"];
+  properties: { result: { $ref: "userlist" } };
+}>; // { result: { name?: string, age?: number }[] }
+```
 
-- `AsTyped<{type: "array", items: [{type: "string"}, {type: "number"}]}>` === `[string, number]`
+### References by path
 
-### Tuple with additional items
+```typescript
+type ObjFromRefs = AsTyped<{
+  definitions: {
+    User: {
+      type: "object";
+      properties: {
+        name: { type: "string" };
+        age: { type: "integer" };
+      };
+    };
+    UserList: {
+      type: "array";
+      items: { $ref: "#/definitions/User" };
+    };
+  };
+  type: "object";
+  required: ["result"];
+  properties: { result: { $ref: "#/definitions/UserList" } };
+}>; // { result: { name?: string, age?: number }[] }
+```
 
-- `AsTyped<{type: "array", items: [{type: "string"}, {type: "number"}], additionalItems: {type: "string"}}}>` === `[string, number, ...string[]]`
+### Advanced Types
 
-### Recursive reference by $id
+```typescript
+type Union1 = AsTyped<{ anyOf: [{ type: "string" }, { type: "number" }] }>; // string | number
 
-#### Simple references:
+type Union2 = AsTyped<{ oneOf: [{ type: "string" }, { type: "number" }] }>; // string | number
 
-- `AsTyped<{definitions: {foo: {$id: "foo", type: "number"}}, $ref: "foo"}>` === `number`
+type Intersection1 = AsTyped<{
+  allOf: [
+    { type: "object"; properties: { a: { type: "number" } } },
+    { type: "object"; properties: { b: { type: "string" } } }
+  ];
+}>; // { a?: number, b?: string }
 
-#### Deep references:
+type Intersection2 = AsTyped<{
+  allOf: [
+    { type: "object"; properties: { a: { type: "number" } } },
+    {
+      oneOf: [
+        { type: "object"; properties: { b: { type: "string" } } },
+        { type: "object"; properties: { b: { type: "boolean" } } }
+      ];
+    }
+  ];
+}>; // { a?: number; b?: string } | { a?: number; b?: boolean }
 
-- `AsTyped<{definitions: {str1: {$id: "str1", $ref: "str2"}, str2: {$id: "str2", type: "string"}}, $ref: "str1"}>` === `string`
+type Not = AsTyped<{ not: { type: "string" } }>; // number | object | any[] | boolean | null | undefined
+```
 
-#### Path references:
-
-- `AsTyped<{definitions: {foo: {type: "number"}}, $ref: "#/definitions/foo"}>` === `number`
-
-### not
-
-`Not` works mainly on primitive types, e.g. `AsTyped<{not: {type: "string"}}>` will resolve to `number | object | any[] | boolean | null | undefined`
-
-### oneOf
-
-- `AsTyped<{oneOf: [{type: "string"}, {type: "number"}]}>` === `string | number`
-
-Currently doesn"t work as expected, and resolves the same as anyOf. See [Typescript issue 20863](https://github.com/Microsoft/TypeScript/issues/20863)
-
-### allOf
-
-- `AsTyped<{allOf: [{type: "object", properties: {a: {type: "number"}}}, {type: "object", properties: {b: {type: "string"}}}]}>` === `{a?: number, b?: string}`
-
-### anyOf
-
-- `AsTyped<{allOf: [{type: "object", properties: {a: {type: "number"}}}, {type: "object", properties: {b: {type: "string"}}, required: ["b"]}]}>` === `{a?: number, b: string} | {a?: number} | {b: string}`
-
-### If/Then/Else
-
-`If/Then/Else` acts exactly like `{oneOf: [{allOf: [If, Then]}, Else]}`. It's strange to have this sugar in the schema which doesn't reduce the verbosity.
-Currently doesn't work as expected, for the same reasons as oneOf. Resolves to `(If & Then) | Else`, which is not an accurate translation. See [Typescript issue 20863](https://github.com/Microsoft/TypeScript/issues/20863)
+- `oneOf` Currently doesn"t work as expected, and resolves the same as anyOf. See [Typescript issue 20863](https://github.com/Microsoft/TypeScript/issues/20863).
+- `if` / `then` / `else` acts exactly like `{oneOf: [{allOf: [If, Then]}, Else]}`. Currently doesn't work as expected, for the same reasons as oneOf. Resolves to `(If & Then) | Else`, which is not an accurate translation.

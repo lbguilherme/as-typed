@@ -21,6 +21,15 @@ assert(_ as AsTyped<{ type: "boolean" }>, _ as boolean);
 
 assert(_ as AsTyped<{ type: "null" }>, _ as null);
 
+assert(_ as AsTyped<{ type: "string"; const: "Hello" }>, _ as "Hello");
+
+assert(_ as AsTyped<{ type: "integer"; const: 4 }>, _ as 4);
+
+assert(
+  _ as AsTyped<{ type: "string"; enum: ["First", "Second", "Third"] }>,
+  _ as "First" | "Second" | "Third"
+);
+
 assert(
   _ as AsTyped<{
     definitions: { num: { $id: "def"; type: "number" } };
@@ -66,7 +75,7 @@ assert(
     required: ["b"];
     properties: { b: { type: "boolean" } };
   }>,
-  _ as { b: boolean } & {}
+  _ as { b: boolean }
 );
 
 assert(
@@ -318,4 +327,116 @@ assert(
     additionalProperties: true;
   }>,
   _ as { b?: boolean; [k: string]: unknown }
+);
+
+assert(
+  _ as AsTyped<{
+    type: "object";
+    properties: {
+      foo: { type: "number" };
+    };
+  }>,
+  _ as { foo?: number }
+);
+
+assert(
+  _ as AsTyped<{
+    type: "object";
+    properties: {
+      foo: { type: "number" };
+      bar: { type: "string" };
+    };
+    required: ["foo"];
+  }>,
+  _ as { foo: number; bar?: string }
+);
+
+assert(
+  _ as AsTyped<{
+    type: "object";
+    additionalProperties: { type: "integer" };
+  }>,
+  _ as Record<string, number>
+);
+
+assert(
+  _ as AsTyped<{
+    type: "array";
+    items: { type: "string" };
+  }>,
+  _ as string[]
+);
+
+assert(
+  _ as AsTyped<{
+    type: "array";
+    items: {
+      type: "array";
+      items: { type: "string" };
+    };
+  }>,
+  _ as string[][]
+);
+
+assert(
+  _ as AsTyped<{
+    type: "array";
+    items: [{ type: "string" }, { type: "number" }];
+  }>,
+  _ as [string, number]
+);
+
+assert(
+  _ as AsTyped<{
+    type: "array";
+    items: [{ type: "number" }, { type: "string" }];
+    additionalItems: { type: "boolean" };
+  }>,
+  _ as [number, string, ...boolean[]]
+);
+
+assert(
+  _ as AsTyped<{
+    definitions: {
+      User: {
+        $id: "userschemaid";
+        type: "object";
+        properties: {
+          name: { type: "string" };
+          age: { type: "integer" };
+        };
+      };
+      UserList: {
+        $id: "userlist";
+        type: "array";
+        items: { $ref: "userschemaid" };
+      };
+    };
+    type: "object";
+    required: ["result"];
+    properties: { result: { $ref: "userlist" } };
+  }>,
+  _ as { result: Array<{ name?: string; age?: number }> }
+);
+
+assert(
+  _ as AsTyped<{
+    definitions: {
+      User: {
+        type: "object";
+        properties: {
+          name: { type: "string" };
+          age: { type: "integer" };
+        };
+      };
+      UserList: {
+        type: "array";
+        items: { $ref: "#/definitions/User" };
+      };
+    };
+    type: "object";
+    required: ["result"];
+    properties: { result: { $ref: "#/definitions/UserList" } };
+  }>,
+  _ as { result: Array<{ name?: string; age?: number }> }
 );
