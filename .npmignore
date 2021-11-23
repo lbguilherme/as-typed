@@ -1,0 +1,5 @@
+.github
+.vscode
+.eslintrc.js
+.gitattributes
+test.ts
