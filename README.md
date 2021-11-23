@@ -45,7 +45,7 @@ type SchemaT = AsTyped<typeof schema>;
     firstName: string;
     age: number;
     hairColor: "black" | "brown" | "blue";
-    lastName?: string | undefined;
+    lastName?: string;
   };
 */
 ```
@@ -58,7 +58,6 @@ type Num = AsTyped<{ type: "number" }>; // number
 type Int = AsTyped<{ type: "integer" }>; // number
 type Bool = AsTyped<{ type: "boolean" }>; // boolean
 type Null = AsTyped<{ type: "null" }>; // null
-type Undef = AsTyped<{ type: "undefined" }>; // undefined
 
 type ConstStr = AsTyped<{ type: "string"; const: "Hello" }>; // "Hello"
 type ConstNum = AsTyped<{ type: "integer"; const: 4 }>; // 4
