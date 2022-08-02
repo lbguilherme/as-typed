@@ -1,6 +1,6 @@
 # `as-typed`
 
-![npm badge](https://img.shields.io/npm/v/as-typed)
+[![npm badge](https://img.shields.io/npm/v/as-typed)](https://www.npmjs.com/package/as-typed)
 
 Type magic to convert a JSON Schema literal into the proper TypeScript type representation, all without additional build steps. This module has no runtime functionality by itself. It exposes a single `AsTyped` type which takes a valid JSON Schema and outputs the equivalent type for it. With this you can get type safety at runtime and validate your values at runtime writing types just once. Great for JSON integrations and data serialization.
 
