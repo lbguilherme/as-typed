@@ -96,6 +96,14 @@ assert(
 );
 
 assert(
+  _ as AsTyped<{
+    required: ["a", "b"];
+    properties: { a: { type: "number" }; b: { type: "string" } };
+  }>,
+  _ as { a: number; b: string }
+);
+
+assert(
   _ as AsTyped<{ type: "object"; additionalProperties: { type: "number" } }>,
   _ as { [key: string]: number }
 );

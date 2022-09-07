@@ -97,23 +97,6 @@ declare namespace AsTypedInternal {
       : AsTypedTupleSchemaWithAdditional<TupleType, Additional>
     : SchemaType extends { not: infer T }
     ? ResolveNot<T>
-    : SchemaType extends {
-        type: "object";
-        required?: infer Required;
-        properties?: infer Props;
-        additionalProperties?: infer AdditionalProperties;
-      }
-    ? ResolveObject<
-        Props,
-        Required extends undefined
-          ? unknown
-          : Required extends string[]
-          ? string extends Required[number]
-            ? unknown
-            : Required[number]
-          : unknown,
-        AdditionalProperties
-      >
     : SchemaType extends { type: "array"; items: infer ValueType }
     ? Array<Resolve<ValueType>>
     : SchemaType extends {
@@ -134,6 +117,23 @@ declare namespace AsTypedInternal {
     ? ResolveAllOf<Inner>
     : SchemaType extends { if: infer If; then: infer Then; else?: infer Else }
     ? (Resolve<If> & Resolve<Then>) | Resolve<Else>
+    : SchemaType extends {
+        type?: "object";
+        required?: infer Required;
+        properties?: infer Props;
+        additionalProperties?: infer AdditionalProperties;
+      }
+    ? ResolveObject<
+        Props,
+        Required extends undefined
+          ? unknown
+          : Required extends string[]
+          ? string extends Required[number]
+            ? unknown
+            : Required[number]
+          : unknown,
+        AdditionalProperties
+      >
     : never;
 
   type ResolveAllOf<Tuple> = Tuple extends []
